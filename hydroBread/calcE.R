@@ -14,19 +14,27 @@ dryPots$dryWeight <- ifelse(is.na(dryPots$cryoSampleSoil_wetWeight_g), dryPots$S
                               dryPots$cryoSampleSoil_wetWeight_g -
                               dryPots$cryoSampleSoil_wetWeight_g*0.01*dryPots$finalSWC)
 dryPots$bulkDen <- dryPots$dryWeight*0.001/dryPots$soilVolume
+leafArea <- read.csv("hydroBdata/leafArea.csv")
 swc <- merge(swc, dryPots[,c('plantID','dryWeight','plant_weight','pot_plus_plate_weight','bulkDen')],
              by='plantID', all=T)
+swc <- merge(swc, leafArea[,c('plantID','totalLeafArea_cm2')], by='plantID', all=T)
 swc$GWC <- (swc$weight_g - swc$plant_weight-swc$pot_plus_plate_weight - swc$dryWeight)*100/swc$dryWeight
 swc$VWC <- swc$GWC*swc$bulkDen
 swc$nday <- as.numeric(swc$Date-as.Date("2018-05-15"))
-
-modelSWC <- gnls(GWC ~ a*soilType*exp(-b*soilType*treatment*nday), data=swc, start=list(a=c(rep.int(50, 3)),b=c(rep.int(0.05, 6))),
-                 param=list(a~soilType, b~soilType*treatment))
-
-modelSWC <- gnls(GWC ~ a*exp(-b*treatment*nday), data=swc, start=list(b=c(0.05, 0.05)),
-                 param=list(a~1, b~treatment))
+#this doesn't work and I don't know why
+modelGWC <- gnls(GWC ~ a*soilType*exp(-b*treatment*soilType*nday), data=swc, start=list(a=c(rep(50, times=3)), b=c(0.05, times=6)),
+                 param=list(a~soilType, b~treatment*soilType))
+modelVWC <- gnls(VWC ~ a*soilType*exp(-b*treatment*soilType*nday), data=swc, start=list(a=c(rep(50, times=3)), b=c(0.05, times=6)),
+                 param=list(a~soilType, b~treatment*soilType))
+summary(nls(VWC~a*exp(-b*nday), data=subset(swc, soilType=="A" & treatment=='drought'), start=list(a=50, b=0.05)))
+confint(nls(VWC~a*exp(-b*nday), data=subset(swc, soilType=="A" & treatment=='drought'), start=list(a=50, b=0.05)))
+summary(nls(VWC~a*exp(-b*nday), data=subset(swc, soilType=="B" & treatment=='drought'), start=list(a=50, b=0.05)))
+confint(nls(VWC~a*exp(-b*nday), data=subset(swc, soilType=="B" & treatment=='drought'), start=list(a=50, b=0.05)))
+summary(nls(VWC~a*exp(-b*nday), data=subset(swc, soilType=="C" & treatment=='drought'), start=list(a=50, b=0.05)))
+confint(nls(VWC~a*exp(-b*nday), data=subset(swc, soilType=="C" & treatment=='drought'), start=list(a=50, b=0.05)))
 
 plot(swc$VWC~swc$Date, col=as.factor(swc$soilType), pch=19)
 
-model <- nlme::gnls(gc ~ g0+(1+xi/sqrt(Dmmol))*(Photo/(CO2S-42.75)), start=list(g0=c(rep.int(0,14)), xi=c(rep.int(3,14))),
-              param=list(xi~spp*treatment, g0~spp*treatment), data=k)
+porom <- read.csv("hydroBdata/conductancePorometers.csv")
+p
+

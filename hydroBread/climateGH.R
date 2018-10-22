@@ -9,6 +9,7 @@ climate$DateHour <- nearestTimeStep(climate$DateTime, 60, "floor")
 climateT <- tbl_df(climate)
 climateHour <- as.data.frame(summarise(group_by(climateT, DateHour), Vpd=mean(VPD),
                                        Temp=mean(Temp_Avg), RH=mean(RH_Avg), PPFD=mean(PPFD_Avg)))
+climateHour$nday <- as.numeric(climateHour$DateHour - ymd_hm(as.character("2018-05-15 23:00")))/(24*60*60)
 climateDay <- as.data.frame(summarise(group_by(climateT, Date), Vpd=mean(VPD), VpdMax=max(VPD),
                                       Tmean=mean(Temp_Avg), Tmax=max(Temp_Avg), Tmin=min(Temp_Avg),
                                       RH=mean(RH_Avg), PPFD=sum(PPFD_Avg*10*60*1e-6)))
