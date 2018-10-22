@@ -20,13 +20,29 @@ swc$GWC <- (swc$weight_g - swc$plant_weight-swc$pot_plus_plate_weight - swc$dryW
 swc$VWC <- swc$GWC*swc$bulkDen
 swc$nday <- as.numeric(swc$Date-as.Date("2018-05-15"))
 
-modelSWC <- gnls(GWC ~ a*soilType*exp(-b*soilType*treatment*nday), data=swc, start=list(a=c(rep.int(50, 3)),b=c(rep.int(0.05, 6))),
-                 param=list(a~soilType, b~soilType*treatment))
+#analysis of co-variance
+modelGWC <- lm(log(GWC)~nday*treatment*soilType, data=swc)
+summary(aov(log(GWC)~nday*treatment*soilType, data=swc))
+modelVWC <- lm(log(VWC)~nday*treatment*soilType, data=swc)
+summary(aov(log(VWC)~nday*treatment*soilType, data=swc))
 
-modelSWC <- gnls(GWC ~ a*exp(-b*treatment*nday), data=swc, start=list(b=c(0.05, 0.05)),
-                 param=list(a~1, b~treatment))
+#one-way ANOVA of maximum and minimum water holding capacity
+summary(aov(GWC~soilType, data=subset(swc, nday==1)))
+TukeyHSD(aov(GWC~soilType, data=subset(swc, nday==1)))
+summary(aov(VWC~soilType, data=subset(swc, nday==1)))
+TukeyHSD(aov(VWC~soilType, data=subset(swc, nday==1)))
+summary(aov(GWC~soilType, data=subset(swc, nday==36 & treatment=="drought")))
+TukeyHSD(aov(GWC~soilType, data=subset(swc, nday==36 & treatment=="drought")))
+summary(aov(VWC~soilType, data=subset(swc, nday==36 & treatment=="drought")))
+TukeyHSD(aov(VWC~soilType, data=subset(swc, nday==36 & treatment=="drought")))
+one <- summaryBy(GWC + VWC ~ soilType, data=subset(swc, nday==1), FUN=c(mean, s.err, length))
+one$nday <- c(rep(1, times=3))
+two <- summaryBy(GWC + VWC ~ soilType, data=subset(swc, nday==36 & treatment=="drought"), FUN=c(mean, s.err, length))
+two$nday <- c(rep(36, times=3))
+write.csv(rbind(one, two), file="hydroBoutput/summarySWC.csv", row.names=F)
 
-plot(swc$VWC~swc$Date, col=as.factor(swc$soilType), pch=19)
+plot(log(swc$GWC)~swc$Date, col=as.factor(swc$soilType), pch=19)
+windows(12,8)
+par(mfrow=c(2,1))
+plot(swc$VWC~swc$nday, col=as.factor(swc$soilType), pch=19, ylab="VWC (%)", xlab="Time (days)", cex.lab=1.5)
 
-model <- nlme::gnls(gc ~ g0+(1+xi/sqrt(Dmmol))*(Photo/(CO2S-42.75)), start=list(g0=c(rep.int(0,14)), xi=c(rep.int(3,14))),
-              param=list(xi~spp*treatment, g0~spp*treatment), data=k)
