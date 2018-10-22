@@ -1,4 +1,6 @@
 source("hydroBread/calcE.R")
+source("hydroBread/quickWP.R")
+wpo <- subset(wpSumm, Treat=='drought' | Treat == 'control')
 windows(10,12)
 swcSumm <- doBy::summaryBy(VWC ~ Soil + Treat + nday, data=swc, FUN=c(mean.na, s.err, length), keep.names = T)
 swcSumm$useless <- as.factor(paste0(swcSumm$Soil, '_', swcSumm$Treat))

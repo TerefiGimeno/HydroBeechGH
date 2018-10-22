@@ -1,5 +1,5 @@
-wp <- read.csv('hydroBdata/waterPotential.csv')
-wp$Date <- ymd(as.character(wp$Date))
+wp <- read.csv('hydroBoutput/wpWide.csv')
+wp$Date <-ymd(as.character(wp$Date))
 wp$nday <- as.numeric(wp$Date-as.Date("2018-05-15"))
-pd <- subset(wp, time=='predawn')
-pdSumm <- doBy::summaryBy()
+wpSumm <- doBy::summaryBy(pd_wp + md_wp ~ Date + Soil + Treat, FUN=c(mean.na, s.err, length),
+                          data=wp)
